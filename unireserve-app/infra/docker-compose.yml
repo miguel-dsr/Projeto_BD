@@ -1,0 +1,15 @@
+services:
+  db:
+    image: mysql:8
+    container_name: mysql-db-projeto
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password123
+      MYSQL_DATABASE: projectbd
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

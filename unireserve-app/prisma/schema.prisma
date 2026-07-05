@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id_usuario          Int    @id @default(autoincrement())
+  nome                String @db.VarChar(60)
+  email_institucional String @db.VarChar(100)
+  senha               String @db.VarChar(60)
+
+  estudante Estudante?
+  servidor  Servidor?
+  telefones Usuario_Telefone[]
+  reservas  Reserva[]
+}
+
+model Estudante {
+  id_usuario Int    @id
+  curso      String @db.VarChar(255)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model Servidor {
+  id_usuario           Int    @id
+  cargo                String @db.VarChar(255)
+  departamento_vinculo String @db.VarChar(255)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model Usuario_Telefone {
+  id_usuario Int
+  telefone   String @db.VarChar(20)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_usuario, telefone])
+}
+
+model Bloco_Predio {
+  id_bloco           Int      @id @default(autoincrement())
+  nome_bloco         String   @db.VarChar(255)
+  campus             String   @db.VarChar(255)
+  horario_abertura   DateTime @db.Time(0)
+  horario_fechamento DateTime @db.Time(0)
+
+  recursos Recurso_Reservavel[]
+}
+
+model Categoria_Recurso {
+  id_categoria Int    @id @default(autoincrement())
+  nome         String @db.VarChar(255)
+
+  recursos Recurso_Reservavel[]
+}
+
+model Recurso_Reservavel {
+  id_recurso                Int    @id @default(autoincrement())
+  nome                      String @db.VarChar(255)
+  indicador_disponibilidade String @db.Char(1)
+  descricao_regras          String @db.VarChar(255)
+  id_bloco                  Int
+  id_categoria              Int
+
+  bloco     Bloco_Predio      @relation(fields: [id_bloco], references: [id_bloco])
+  categoria Categoria_Recurso @relation(fields: [id_categoria], references: [id_categoria])
+
+  espaco_fisico Espaco_Fisico?
+  equipamento   Equipamento?
+  manutencoes   Manutencao[]
+  reservas      Reserva_Recurso[]
+}
+
+model Espaco_Fisico {
+  id_recurso Int @id
+  capacidade Int
+
+  recurso Recurso_Reservavel @relation(fields: [id_recurso], references: [id_recurso])
+}
+
+model Equipamento {
+  id_recurso   Int    @id
+  numero_serie Int
+  marca_modelo String @db.VarChar(255)
+
+  recurso Recurso_Reservavel @relation(fields: [id_recurso], references: [id_recurso])
+}
+
+model Manutencao {
+  id_manutencao    Int      @id @default(autoincrement())
+  data             DateTime @db.Date
+  descricao        String   @db.VarChar(255)
+  valor            Decimal  @db.Decimal(8, 2)
+  foto_estado_blob Bytes    @db.LongBlob
+  id_recurso       Int
+
+  recurso Recurso_Reservavel @relation(fields: [id_recurso], references: [id_recurso])
+}
+
+model Reserva {
+  id_reserva                Int      @id @default(autoincrement())
+  data_solicitacao          DateTime @db.DateTime(3)
+  aceitou_termo_solicitacao Boolean
+  TS_aceitacao_termo        DateTime @db.Timestamp(0)
+  data_inicio               DateTime @db.Date
+  duracao_reserva           DateTime @db.Time(0)
+  data_devolucao            DateTime @db.Date
+  id_usuario                Int
+
+  usuario  Usuario           @relation(fields: [id_usuario], references: [id_usuario])
+  recursos Reserva_Recurso[]
+}
+
+model Reserva_Recurso {
+  id_reserva Int
+  id_recurso Int
+
+  reserva Reserva            @relation(fields: [id_reserva], references: [id_reserva])
+  recurso Recurso_Reservavel @relation(fields: [id_recurso], references: [id_recurso])
+
+  @@id([id_reserva, id_recurso])
+}
